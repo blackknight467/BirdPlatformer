@@ -13,7 +13,7 @@ public class SinePositionChanger : MonoBehaviour
     public void Start ()
     {
         //use the localPosition so that we could move a parent around without disrupting this
-        startPos = (Vector2) transform.localPosition;
+		startPos = new Vector3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z);
     }
     
     public void Update ()
@@ -24,6 +24,6 @@ public class SinePositionChanger : MonoBehaviour
 
         //since t is between 0 and 1, when we multiply that by our movementDistance (or amplitude, if we're being technical),
         //we'll go between the full distance away (1) and no distance away (0) from where we started.
-        transform.localPosition = (Vector3) ( startPos + movementDistance * t );
+		transform.localPosition = new Vector3(startPos.x + movementDistance.x * t, startPos.y + movementDistance.y * t, transform.localPosition.z);
     }
 }

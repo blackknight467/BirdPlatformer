@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 //a PhysicsMover is just like a Mover except it uses Unity's built-in physics to move
 public class Mover : MonoBehaviour
@@ -18,9 +20,8 @@ public class Mover : MonoBehaviour
     [Tooltip ("When our X velocity is lower than this, we are standing. This is mostly for aesthetic reasons like animations.")]
     public float minimumWalkSpeed = 0.1f;
 
-    //we need to track whether we're on the ground or not to allow jumping. a "bool" is a boolean
-    //value - true or false. So this will either be yes or no to whether we are on the ground.
-    private bool isOnGround;
+
+	private List<GameObject> collisionList;
     
     //this is Mover has an Animator attached, we can play animations as we go.
     private Animator animator;
@@ -28,7 +29,7 @@ public class Mover : MonoBehaviour
     //we need to initialize isOnGround to be false, since we start in the air.
     public void Start()
     {
-        isOnGround = false;
+		collisionList = new List<GameObject>();
         animator = GetComponent<Animator>();
     }
 
@@ -41,13 +42,21 @@ public class Mover : MonoBehaviour
             animator.SetBool( "walking", IsWalking() );
         }
     }
+
+	public bool isOnGround()
+	{
+		if (collisionList.Count > 0) {
+			return true;
+		}
+		return false;
+	}
     
     //this tells our Rigidbody to accelerate in a given direction, using our acceleration or
     //aerialAcceleration values, depending on if we're in the air or not.
     public void AccelerateInDirection(Vector2 direction)
     {
         float accel = acceleration;
-        if ( !isOnGround )
+		if ( !isOnGround() )
         {
             accel = aerialAcceleration;
         }
@@ -63,18 +72,16 @@ public class Mover : MonoBehaviour
     public void Jump()
     {
         //only apply the velocity if we're currently standing on the ground
-        if ( isOnGround )
+		if ( isOnGround() )
         {
             GetComponent<Rigidbody2D>().velocity += new Vector2( 0.0f, jumpImpulse );
     
+			collisionList.Clear ();
             //tell our animator to play a jump animation
             if ( animator != null )
             {
                 animator.SetBool( "jumping", true );
             }
-
-            //since we've just jumped, we're no longer on the ground
-            isOnGround = false;
         }
     }
     
@@ -89,7 +96,9 @@ public class Mover : MonoBehaviour
         //how might we handle multiple collisions? Maybe a list?
         if ( collision.collider.gameObject.layer == 8 )
         {
-            isOnGround = true;
+			if (!collisionList.Contains(collision.collider.gameObject)) {
+				collisionList.Add (collision.collider.gameObject);
+			}
 
             //tell our animator to play a jump animation
             if ( animator != null )
@@ -105,7 +114,7 @@ public class Mover : MonoBehaviour
         //we're not colliding anymore, so we're no longer standing on the ground
         if ( collision.collider.gameObject.layer == 8 )
         {
-            isOnGround = false;
+			collisionList.Remove (collision.collider.gameObject);
 
             //tell our animator to play a jump animation
             if ( animator != null )
